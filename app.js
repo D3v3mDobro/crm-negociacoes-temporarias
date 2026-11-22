@@ -1,28 +1,5 @@
 const params = new URLSearchParams(location.search);
 const negotiationId = params.get("negociacao") || "";
-const createdAt = Number(params.get("criado") || Date.now());
-const durationMs = 30 * 60 * 1000;
-
-const title = params.get("oferta") || "Sua oferta";
-const customer = params.get("cliente") || "Cliente";
-const value = Number(params.get("valor") || 0);
-const validity = params.get("validade");
-const description = params.get("descricao");
-const statusKey = `offer-status-${negotiationId}`;
-
-document.getElementById("offer-title").textContent = title;
-document.getElementById("customer-name").textContent = customer;
-document.getElementById("offer-description").textContent = description || "Consulte os detalhes desta proposta com o vendedor.";
-document.getElementById("offer-value").textContent = value.toLocaleString("pt-BR", {
-  style: "currency",
-  currency: "BRL"
-});
-
-if (validity) {
-  const [year, month, day] = validity.split("-");
-  document.getElementById("offer-validity").textContent =
-    `${day}/${month}/${year}`;
-}
 
 function showFinalStatus(status) {
   const actionArea = document.getElementById("action-area");
@@ -38,9 +15,6 @@ function showFinalStatus(status) {
     finalStatus.textContent = "Oferta recusada.";
   }
 
-  params.set("status", status);
-  history.replaceState(null, "", `${location.pathname}?${params.toString()}`);
-  localStorage.setItem(statusKey, status);
 }
 
 function expireOffer() {
@@ -48,8 +22,10 @@ function expireOffer() {
   document.getElementById("expired").hidden = false;
 }
 
+let expiresAt = Date.now() + (30 * 60 * 1000);
+
 function updateTimer() {
-  const remaining = durationMs - (Date.now() - createdAt);
+  const remaining = expiresAt - Date.now();
   if (remaining <= 0) {
     expireOffer();
     return;
@@ -61,18 +37,81 @@ function updateTimer() {
     `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-const savedStatus = params.get("status") || (negotiationId ? localStorage.getItem(statusKey) : "");
-if (savedStatus === "aceita" || savedStatus === "recusada") {
-  showFinalStatus(savedStatus);
+async function supabaseRpc(name, body) {
+  const response = await fetch(`${window.SUPABASE_CONFIG.url}/rest/v1/rpc/${name}`, {
+    method: "POST",
+    headers: {
+      apikey: window.SUPABASE_CONFIG.publishableKey,
+      Authorization: `Bearer ${window.SUPABASE_CONFIG.publishableKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error("Não foi possível consultar a negociação.");
+  return response.json();
 }
 
-document.getElementById("accept-offer").addEventListener("click", () => {
-  showFinalStatus("aceita");
-});
+async function loadNegotiation() {
+  if (!negotiationId) {
+    expireOffer();
+    return;
+  }
 
-document.getElementById("decline-offer").addEventListener("click", () => {
-  showFinalStatus("recusada");
-});
+  try {
+    const rows = await supabaseRpc("get_negotiation", { p_public_token: negotiationId });
+    const negotiation = Array.isArray(rows) ? rows[0] : rows;
+    if (!negotiation) {
+      expireOffer();
+      return;
+    }
 
-updateTimer();
-setInterval(updateTimer, 1000);
+    document.getElementById("offer-title").textContent = negotiation.title;
+    document.getElementById("customer-name").textContent = negotiation.customer_name;
+    document.getElementById("offer-description").textContent =
+      negotiation.description || "Consulte os detalhes desta proposta com o vendedor.";
+    document.getElementById("offer-value").textContent =
+      Number(negotiation.value).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+    if (negotiation.validity) {
+      const [year, month, day] = negotiation.validity.split("-");
+      document.getElementById("offer-validity").textContent = `${day}/${month}/${year}`;
+    }
+
+    expiresAt = new Date(negotiation.expires_at).getTime();
+    updateTimer();
+    setInterval(updateTimer, 1000);
+
+    if (negotiation.status === "aceita" || negotiation.status === "recusada") {
+      showFinalStatus(negotiation.status);
+      return;
+    }
+
+    document.getElementById("accept-offer").addEventListener("click", async () => {
+      await respond("aceita");
+    });
+    document.getElementById("decline-offer").addEventListener("click", async () => {
+      await respond("recusada");
+    });
+  } catch (error) {
+    expireOffer();
+  }
+}
+
+async function respond(status) {
+  try {
+    const rows = await supabaseRpc("respond_negotiation", {
+      p_public_token: negotiationId,
+      p_status: status
+    });
+    if (!rows?.length) {
+      expireOffer();
+      return;
+    }
+    showFinalStatus(status);
+  } catch (error) {
+    document.getElementById("action-area").hidden = false;
+  }
+}
+
+loadNegotiation();
