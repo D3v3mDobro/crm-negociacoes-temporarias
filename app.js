@@ -100,6 +100,7 @@ async function loadNegotiation() {
 async function respond(status) {
   const acceptButton = document.getElementById("accept-offer");
   const declineButton = document.getElementById("decline-offer");
+  const notificationWindow = window.open("", "_blank");
   acceptButton.disabled = true;
   declineButton.disabled = true;
   acceptButton.textContent = status === "aceita" ? "Aceitando..." : "Aceitar oferta";
@@ -112,11 +113,43 @@ async function respond(status) {
     });
     if (!rows?.length) {
       expireOffer();
+      if (notificationWindow) notificationWindow.close();
       return;
     }
     showFinalStatus(status);
+    openSellerNotification(status, negotiationId, notificationWindow);
   } catch (error) {
+    if (notificationWindow) notificationWindow.close();
     document.getElementById("action-area").hidden = false;
+    acceptButton.disabled = false;
+    declineButton.disabled = false;
+    acceptButton.textContent = "Aceitar oferta";
+    declineButton.textContent = "Não tenho interesse";
+  }
+}
+
+function openSellerNotification(status, negotiationId, notificationWindow) {
+  const phone = (window.SUPABASE_CONFIG.sellerPhone || "").replace(/\D/g, "");
+  if (!phone) return;
+
+  const negotiationTitle = document.getElementById("offer-title").textContent;
+  const customerName = document.getElementById("customer-name").textContent;
+  const result = status === "aceita" ? "ACEITO ✅" : "RECUSADO ❌";
+  const message =
+    `Negociação ${result}\n` +
+    `Cliente: ${customerName}\n` +
+    `Oferta: ${negotiationTitle}\n` +
+    `Código: ${negotiationId}`;
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+  const notificationLink = document.getElementById("seller-notification");
+  notificationLink.href = url;
+  notificationLink.hidden = false;
+
+  if (notificationWindow) {
+    notificationWindow.location.href = url;
+  } else {
+    notificationLink.click();
   }
 }
 
