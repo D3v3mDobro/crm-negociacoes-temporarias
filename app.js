@@ -87,18 +87,24 @@ async function loadNegotiation() {
       return;
     }
 
-    document.getElementById("accept-offer").addEventListener("click", async () => {
-      await respond("aceita");
-    });
-    document.getElementById("decline-offer").addEventListener("click", async () => {
-      await respond("recusada");
-    });
+    const acceptButton = document.getElementById("accept-offer");
+    const declineButton = document.getElementById("decline-offer");
+
+    acceptButton.addEventListener("click", () => respond("aceita"), { once: true });
+    declineButton.addEventListener("click", () => respond("recusada"), { once: true });
   } catch (error) {
     expireOffer();
   }
 }
 
 async function respond(status) {
+  const acceptButton = document.getElementById("accept-offer");
+  const declineButton = document.getElementById("decline-offer");
+  acceptButton.disabled = true;
+  declineButton.disabled = true;
+  acceptButton.textContent = status === "aceita" ? "Aceitando..." : "Aceitar oferta";
+  declineButton.textContent = status === "recusada" ? "Recusando..." : "Não tenho interesse";
+
   try {
     const rows = await supabaseRpc("respond_negotiation", {
       p_public_token: negotiationId,

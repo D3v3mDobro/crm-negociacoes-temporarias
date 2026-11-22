@@ -47,6 +47,7 @@ button {
 }
 .accept { background: #16a34a; color: #fff; }
 .decline { background: #e2e8f0; color: #334155; }
+button:disabled { cursor: wait; opacity: .65; }
 .final-status { border-radius: 10px; padding: 16px; text-align: center; font-weight: 800; }
 .final-status.accepted { background: #dcfce7; color: #166534; }
 .final-status.declined { background: #fee2e2; color: #991b1b; }
