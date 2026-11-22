@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oferta Comercial</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="offer-card">
+    <div id="expired" class="expired" hidden>
+      <span class="status-icon">!</span>
+      <h1>Esta negociação expirou</h1>
+      <p>O prazo de 30 minutos terminou. Solicite uma nova oferta ao vendedor.</p>
+    </div>
+
+    <div id="offer-content">
+      <div class="offer-header">
+        <span class="offer-label">OFERTA COMERCIAL</span>
+        <div id="timer" class="timer">30:00</div>
+      </div>
+
+      <h1 id="offer-title">Sua oferta</h1>
+      <p id="offer-description" class="description"></p>
+
+      <div class="offer-details">
+        <div>
+          <span>Cliente</span>
+          <strong id="customer-name">-</strong>
+        </div>
+        <div>
+          <span>Valor</span>
+          <strong id="offer-value">R$ 0,00</strong>
+        </div>
+        <div>
+          <span>Validade da oferta</span>
+          <strong id="offer-validity">A confirmar</strong>
+        </div>
+      </div>
+
+      <div id="action-area" class="actions">
+        <button id="accept-offer" class="accept" type="button">Aceitar oferta</button>
+        <button id="decline-offer" class="decline" type="button">Não tenho interesse</button>
+      </div>
+
+      <div id="final-status" class="final-status" hidden></div>
+    </div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
