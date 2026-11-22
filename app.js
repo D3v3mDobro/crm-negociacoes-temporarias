@@ -32,7 +32,7 @@ function showFinalStatus(status) {
 
   if (status === "aceita") {
     finalStatus.className = "final-status accepted";
-    finalStatus.textContent = "Oferta aceita! O vendedor foi informado.";
+    finalStatus.textContent = "Oferta aceita! Envie esta confirmação ao vendedor.";
   } else {
     finalStatus.className = "final-status declined";
     finalStatus.textContent = "Oferta recusada.";
