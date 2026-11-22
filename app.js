@@ -100,7 +100,6 @@ async function loadNegotiation() {
 async function respond(status) {
   const acceptButton = document.getElementById("accept-offer");
   const declineButton = document.getElementById("decline-offer");
-  const notificationWindow = window.open("", "_blank");
   acceptButton.disabled = true;
   declineButton.disabled = true;
   acceptButton.textContent = status === "aceita" ? "Aceitando..." : "Aceitar oferta";
@@ -113,13 +112,11 @@ async function respond(status) {
     });
     if (!rows?.length) {
       expireOffer();
-      if (notificationWindow) notificationWindow.close();
       return;
     }
     showFinalStatus(status);
-    openSellerNotification(status, negotiationId, notificationWindow);
+    openSellerNotification(status, negotiationId);
   } catch (error) {
-    if (notificationWindow) notificationWindow.close();
     document.getElementById("action-area").hidden = false;
     acceptButton.disabled = false;
     declineButton.disabled = false;
@@ -128,7 +125,7 @@ async function respond(status) {
   }
 }
 
-function openSellerNotification(status, negotiationId, notificationWindow) {
+function openSellerNotification(status, negotiationId) {
   const phone = (window.SUPABASE_CONFIG.sellerPhone || "").replace(/\D/g, "");
   if (!phone) return;
 
@@ -145,12 +142,8 @@ function openSellerNotification(status, negotiationId, notificationWindow) {
   const notificationLink = document.getElementById("seller-notification");
   notificationLink.href = url;
   notificationLink.hidden = false;
-
-  if (notificationWindow) {
-    notificationWindow.location.href = url;
-  } else {
-    notificationLink.click();
-  }
+  notificationLink.textContent = "Abrindo o WhatsApp do vendedor...";
+  window.location.href = url;
 }
 
 loadNegotiation();
