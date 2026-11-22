@@ -115,7 +115,7 @@ async function respond(status) {
       return;
     }
     showFinalStatus(status);
-    openSellerNotification(status, negotiationId);
+    openSellerNotification(status);
   } catch (error) {
     document.getElementById("action-area").hidden = false;
     acceptButton.disabled = false;
@@ -125,7 +125,7 @@ async function respond(status) {
   }
 }
 
-function openSellerNotification(status, negotiationId) {
+function openSellerNotification(status) {
   const phone = (window.SUPABASE_CONFIG.sellerPhone || "").replace(/\D/g, "");
   if (!phone) return;
 
@@ -135,8 +135,7 @@ function openSellerNotification(status, negotiationId) {
   const message =
     `Negociação ${result}\n` +
     `Cliente: ${customerName}\n` +
-    `Oferta: ${negotiationTitle}\n` +
-    `Código: ${negotiationId}`;
+    `Oferta: ${negotiationTitle}`;
   const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
   const notificationLink = document.getElementById("seller-notification");
