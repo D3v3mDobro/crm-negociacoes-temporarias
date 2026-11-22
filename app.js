@@ -131,7 +131,7 @@ function openSellerNotification(status, negotiationId) {
 
   const negotiationTitle = document.getElementById("offer-title").textContent;
   const customerName = document.getElementById("customer-name").textContent;
-  const result = status === "aceita" ? "ACEITO ✅" : "RECUSADO ❌";
+  const result = status === "aceita" ? "ACEITO" : "RECUSADO";
   const message =
     `Negociação ${result}\n` +
     `Cliente: ${customerName}\n` +
